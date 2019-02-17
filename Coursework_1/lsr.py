@@ -30,14 +30,16 @@ class Segment():
         y.shape = (y.shape[0], 1)
 
         H = np.linalg.inv(np.matmul(x.T,x))
-        J = np.matmul(np.matmul(H, x.T), y)
-        return J
+        ab = np.matmul(np.matmul(H, x.T), y)
+        return ab
     
     def residual(self, a, b):
         return reduce(lambda acc, xy: acc + (xy[1] - (a + b * xy[0])) ** 2, zip(self.xs, self.ys), 0)
 
-    def plot(self, ax):
-        ax.plot(self.xs, self.ys)
+    def plot(self, ax, a, b):
+        #ax.plot(self.xs, self.ys)
+        width = np.linspace(self.xs[0], self.xs[len(self.xs) - 1], 50)
+        ax.plot(width, b * width + a)
 
 # split into segments
 segments = []
@@ -55,7 +57,7 @@ for seg in segments:
     print(err)
     # plot line if app.
     if plot:
-        seg.plot(ax)
+        seg.plot(ax, ans[0], ans[1])
 
 # produce a figure w/ reconstructed line
 if plot:
