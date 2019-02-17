@@ -1,6 +1,7 @@
 from utilities import load_points_from_file, view_data_segments
 
 import sys, os
+from copy import copy, deepcopy
 from functools import reduce
 
 import numpy as np
@@ -13,23 +14,13 @@ if len(sys.argv) >= 3:
     plot = True if sys.argv[2] == '--plot' else False
 xs, ys = load_points_from_file(file)
 
-
 class Segment():
     def __init__(self, xs, ys):
         self.xs, self.ys = xs, ys
+    
+    def leastSquares(self):
+        x, y = copy(self.xs), copy(self.ys)
 
-# split into segments
-segX = [xs[x:x+20] for x in range(0, len(xs), 20)]
-segY = [ys[x:x+20] for x in range(0, len(xs), 20)]
-
-Segment(segX[0], segY[0])
-
-ax = plt.axes()
-
-# for each segment...
-for i in range(0, len(segX)):
-    # determine the function type
-    def leastSquares(x, y):
         x.shape = (y.shape[0],1)
         col = np.array([1] * y.shape[0])
         col.shape = (y.shape[0],1)
@@ -41,16 +32,31 @@ for i in range(0, len(segX)):
         H = np.linalg.inv(np.matmul(x.T,x))
         J = np.matmul(np.matmul(H, x.T), y)
         return J
+    
+    def residual(self, a, b):
+        return reduce(lambda acc, xy: acc + (xy[1] - (a + b * xy[0])) ** 2, zip(self.xs, self.ys), 0)
 
-    ans = leastSquares(segX[i], segY[i])
+    def plot(self, ax):
+        ax.plot(self.xs, self.ys)
 
+# split into segments
+segments = []
+for i in range(0, len(xs), 20):
+    segments.append(Segment(xs[i:i+20], ys[i:i+20]))
+
+ax = plt.axes()
+
+# for each segment...
+for seg in segments:
+    # determine the function type
+    ans = seg.leastSquares()
     # produce the total reconstruction error
-    def residual(a, b, xs, ys):
-        return reduce(lambda acc, xy: acc + (xy[1] - (a + b * xy[0][0])) ** 2, zip(xs, ys), 0)
-
-    # produce a figure w/ reconstructed line
+    err = seg.residual(ans[0][0], ans[1][0])
+    print(err)
+    # plot line if app.
     if plot:
-        ax.plot(segX[i], segY[i])
+        seg.plot(ax)
 
+# produce a figure w/ reconstructed line
 if plot:
     view_data_segments(xs, ys)
