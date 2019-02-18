@@ -19,49 +19,30 @@ class Segment():
         self.xs, self.ys = xs, ys
     
     def leastSquaresPoly(self, p):
-        # (X^t * X)^-1 * X^T * y
-
         X = np.empty((0, 20))
         for deg in range(0, p + 1):
             row = list(map(lambda x: x ** deg, self.xs))
             X = np.insert(X, deg, row, 0)
         
-        #print(X)
-        #print(self.ys)
+        # (X^t * X)^-1 * X^T * y
         H = np.linalg.inv(np.matmul(X, X.T))
-        #print(H)
-        #print(H.shape)
         C = np.matmul(X, self.ys)
-        #print(C)
-        #print(H.shape, C.shape)
-        R = np.matmul(H, C)
-        #print(R)
-
-        coeff = []
-        return R
+        coeff = np.matmul(H, C)
+        return coeff
     
-    def leastSquares(self):
-        x, y = copy(self.xs), copy(self.ys)
-
-        x.shape = (y.shape[0],1)
-        col = np.array([1] * y.shape[0])
-        col.shape = (y.shape[0],1)
-        x = np.hstack((col, x))
-        
-        y = y.transpose()
-        y.shape = (y.shape[0], 1)
-
-        H = np.linalg.inv(np.matmul(x.T,x))
-        ab = np.matmul(np.matmul(H, x.T), y)
-        return ab
+    def error(self, coeff):
+        err = 0
+        for i in range(0, len(self.xs)):
+            x = self.xs[i]
+            y = self.ys[i]
+            lineY = 0
+            for deg in range(0, len(coeff)):
+                lineY += coeff[deg] * (x ** deg)
+            err += abs(y - lineY)
+        return err
     
     def residual(self, a, b):
         return reduce(lambda acc, xy: acc + (xy[1] - (a + b * xy[0])) ** 2, zip(self.xs, self.ys), 0)
-
-    def plot(self, ax, a, b):
-        #ax.plot(self.xs, self.ys)
-        width = np.linspace(self.xs[0], self.xs[len(self.xs) - 1], 50)
-        ax.plot(width, b * width + a)
     
     def plotPoly(self, ax, coeff):
         width = np.linspace(self.xs[0], self.xs[len(self.xs) - 1], 50)
@@ -81,16 +62,21 @@ ax = plt.axes()
 # for each segment...
 for seg in segments:
     # determine the function type
-    ans = seg.leastSquaresPoly(3)
-    #ansP = seg.leastSquaresPoly(1)
-    #print('A & B', ans, ansP)
+    ans = []
+    errs = {}
+    for p in range(1, 5):
+        ans = seg.leastSquaresPoly(p)
+        errs[p] = seg.error(ans)
+    minErr = min(errs, key=errs.get)
+    #print(errs)
+    print('=>', minErr)
+    ans = seg.leastSquaresPoly(minErr)
 
     # produce the total reconstruction error
-    err = seg.residual(ans[0], ans[1])
-    print(err)
+    ##err = seg.residual(ans[0], ans[1])
+
     # plot line if app.
     if plot:
-        #seg.plot(ax, ans[0], ans[1])
         seg.plotPoly(ax, ans)
 
 # produce a figure w/ reconstructed line
