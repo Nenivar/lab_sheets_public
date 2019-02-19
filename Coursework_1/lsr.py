@@ -44,6 +44,11 @@ class Segment():
     def residual(self, a, b):
         return reduce(lambda acc, xy: acc + (xy[1] - (a + b * xy[0])) ** 2, zip(self.xs, self.ys), 0)
     
+    def regularize(self, coeff):
+        print(coeff, reduce(lambda acc, c: acc + c ** 2, coeff))
+        return reduce(lambda acc, c: acc + c ** 2, coeff)
+        #return reduce(lambda acc, c: abs(acc + c), coeff)
+    
     def plotPoly(self, ax, coeff):
         width = np.linspace(self.xs[0], self.xs[len(self.xs) - 1], 50)
         yVals = 0
@@ -64,9 +69,10 @@ for seg in segments:
     # determine the function type
     ans = []
     errs = {}
-    for p in range(1, 5):
+    for p in range(1, 4):
         ans = seg.leastSquaresPoly(p)
-        errs[p] = seg.error(ans)
+        #seg.regularize(ans)
+        errs[p] = seg.error(ans) ** 2 - 5 * seg.regularize(ans)
     minErr = min(errs, key=errs.get)
     #print(errs)
     print('=>', minErr)
