@@ -26,6 +26,12 @@ def getLineVal(coeff, x):
         y += coeff[deg] * (x ** deg)
     return y
 
+def getLineValF(coeff, func, x):
+    y = 0
+    for deg in range(0, len(coeff)):
+        y += coeff[deg] * (func(x) ** deg)
+    return y
+
 class Segment():
     def __init__(self, xs, ys):
         self.xs, self.ys = xs, ys
@@ -142,8 +148,29 @@ for seg in segments:
     # produce the total reconstruction error
     ##err = seg.residual(ans[0], ans[1])
 
+    lines = []
+    # line = (func, p, coeff, err)
+    lines.append((np.sin, 1))
+    lines.extend( [ (itself, p) for p in [1, 3] ] )
     funcs = {}
+    err = {}
+    for f in lines:
+        coeff = seg.leastSquaresPoly(f[1], f[0])
+        funcs[f] = partial(getLineValF, coeff, f[0])
+        err[f] = seg.errorF(funcs[f])    
+    #print(funcs)
 
+    minErr = min(err, key=err.get)
+
+    # is err close to others?
+    print(err)
+    print('=>', minErr)
+    
+    #if plot:
+        #seg.plotF(ax, func, coeff)
+    #funcs.append(itself, 2, [], 0)
+
+    """ funcs = {}
     funcs['sin'] = lambda x: np.sin(x)
     for i in [1, 3]:
         coeff = seg.leastSquaresPoly(i)
@@ -154,12 +181,12 @@ for seg in segments:
         errs[f] = seg.errorF(f)
         print(errs[f])
     minErr = min(errs, key=errs.get)
-    print(funcs)
+    print(funcs) """
 
     # plot line if app.
     if plot:
         #seg.plotPoly(ax, ans)
-        seg.plotF(ax, minErr)
+        seg.plotF(ax, funcs[minErr])
 
 # produce a figure w/ reconstructed line
 if plot:
