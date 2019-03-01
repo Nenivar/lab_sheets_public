@@ -72,7 +72,7 @@ class Segment():
         for i in range(0, len(self.xs)):
             x = self.xs[i]
             y = self.ys[i]
-            err += abs(y - func(x))
+            err += (y - func(x)) ** 2
         return err
     
     def error(self, coeff):
@@ -83,7 +83,9 @@ class Segment():
             lineY = getLineVal(coeff, x)
             #for deg in range(0, len(coeff)):
                 #lineY += coeff[deg] * (x ** deg)
-            err += abs(y - lineY)
+            #err += (y - lineY) ** 2
+            err += np.sum((y - lineY) ** 2)
+        
         #return abs(err)
         #return abs(err)
         return err
@@ -121,6 +123,7 @@ for i in range(0, len(xs), 20):
 ax = plt.axes()
 
 # for each segment...
+totErr = 0
 for seg in segments:
     # determine the function type
     ans = []
@@ -163,8 +166,24 @@ for seg in segments:
     minErr = min(err, key=err.get)
 
     # is err close to others?
+    """ for l in lines:
+        if l != minErr:
+            if err[l] * 0.95 < err[minErr]:
+                print(err[l] * 0.95, ' < ', err[minErr], ': ', l)
+                minErr = l """
+    #if err[l]  0.95 < err[minErr]:
+        #minErr = l
+    """ for l in lines:
+        if minErr != (itself, 1) and l != minErr:
+            if math.isclose(err[minErr], err[l], rel_tol=0.1):
+                print('new: ', l)
+                minErr = l """
+    if minErr != (itself, 1):
+        if math.isclose(err[minErr], err[(itself, 1)], rel_tol=0.15):
+            minErr = (itself, 1)
     print(err)
     print('=>', minErr)
+    totErr += err[minErr]
     
     #if plot:
         #seg.plotF(ax, func, coeff)
@@ -187,6 +206,8 @@ for seg in segments:
     if plot:
         #seg.plotPoly(ax, ans)
         seg.plotF(ax, funcs[minErr])
+
+print('TOTAL ERROR: ', totErr)
 
 # produce a figure w/ reconstructed line
 if plot:
