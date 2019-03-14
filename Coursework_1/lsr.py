@@ -1,7 +1,6 @@
 from utilities import load_points_from_file, view_data_segments
 
 import sys, os
-from copy import copy, deepcopy
 from functools import reduce, partial
 
 import numpy as np
